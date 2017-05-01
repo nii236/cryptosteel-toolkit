@@ -1,0 +1,10 @@
+package: github.com/nii236/cryptosteel-generator
+import:
+- package: github.com/btcsuite/btcd
+  subpackages:
+  - chaincfg
+- package: github.com/btcsuite/btcutil
+  subpackages:
+  - hdkeychain
+  - base58
+- package: github.com/nii236/go-bip39

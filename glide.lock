@@ -1,0 +1,28 @@
+hash: a3982a93401a00b9daecb9e8266f65cd70e599a5a829e63b3f76f8204ca61f11
+updated: 2016-12-24T12:08:08.868947049+08:00
+imports:
+- name: github.com/btcsuite/btcd
+  version: 9f962b60d68c1e0d7ccfc9898c9c5b514253d753
+  subpackages:
+  - btcec
+  - chaincfg
+  - chaincfg/chainhash
+  - wire
+- name: github.com/btcsuite/btcutil
+  version: 96e858f48ed95f9245e765d98be0ee01176409c7
+  subpackages:
+  - base58
+  - hdkeychain
+- name: github.com/btcsuite/fastsha256
+  version: 637e656429416087660c84436a2a035d69d54e2e
+- name: github.com/btcsuite/golangcrypto
+  version: 53f62d9b43e87a6c56975cf862af7edf33a8d0df
+  subpackages:
+  - ripemd160
+- name: github.com/nii236/go-bip39
+  version: 859971db0904ac8a932609a858add3da440bf087
+- name: golang.org/x/crypto
+  version: f6b343c37ca80bfa8ea539da67a0b621f84fab1d
+  subpackages:
+  - pbkdf2
+testImports: []
