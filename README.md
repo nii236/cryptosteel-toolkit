@@ -15,7 +15,7 @@ flag sure ramp inquiry panel jaguar balcony merit tunnel profit obtain public co
 
 ## Get first derived child key (truncated mnemonic)
 ```
-./cryptosteel-generator --t --m "flag sure ramp inqu pane jagu balc meri tunn prof obta publ comf dino thro dign expla symp cart aler much wash era samp"
+./cryptosteel-generator --t --m "flag sure ramp inqu pane jagu balc meri tunn prof obta publ comf dino thro dign expl symp cart aler much wash era samp"
 
 Using full mnemonic...
 mnemonic: flag sure ramp inquiry panel jaguar balcony merit tunnel profit obtain public comfort dinosaur throw dignity explain symptom cart alert much wash era sample
