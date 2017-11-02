@@ -19,13 +19,20 @@ var mnemonic string
 var password string
 var truncated bool
 var generate bool
+var accountIndex uint64
+var chainIndex uint64
+var addressIndex uint64
 
 // Example: pizz knoc taxi bris quar tuna much mang okay twel edge brok occu base corn
 func init() {
 	flag.StringVar(&mnemonic, "m", "", "Mnemonic")
 	flag.BoolVar(&truncated, "t", false, "Truncated mnemonic")
 	flag.StringVar(&password, "p", "", "Password")
+	flag.Uint64Var(&accountIndex, "a", 0, "Account index")
+	flag.Uint64Var(&chainIndex, "c", 0, "Chain index")
+	flag.Uint64Var(&addressIndex, "i", 0, "Address index")
 	flag.BoolVar(&generate, "gen", false, "Generate a mnemonic")
+
 }
 
 func generateMnemonic() {
@@ -49,9 +56,9 @@ func prepareSeed(mnemonic, password string, truncated bool) *hdkeychain.Extended
 	}
 	child, _ := hdkey.Child(0x80000000 + 44)
 	child, _ = child.Child(0x80000000)
-	child, _ = child.Child(0x80000000)
-	child, _ = child.Child(0)
-	child, _ = child.Child(0)
+	child, _ = child.Child(uint32(0x80000000 + accountIndex))
+	child, _ = child.Child(uint32(0 + chainIndex))
+	child, _ = child.Child(uint32(addressIndex))
 
 	return child
 }
