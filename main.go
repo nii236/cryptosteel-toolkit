@@ -24,8 +24,14 @@ func prepareSeed(mnemonic string, flags *RecoverFlags) (*hdkeychain.ExtendedKey,
 	if err != nil {
 		return nil, err
 	}
+
+	chainOffset := uint32(0)
+	if flags.WalletTestnet {
+		chainOffset = 1
+	}
+
 	child, _ := hdkey.Child(0x80000000 + 44)
-	child, _ = child.Child(0x80000000)
+	child, _ = child.Child(0x80000000 + chainOffset)
 	child, _ = child.Child(uint32(0x80000000 + flags.WalletAccountIndex))
 	child, _ = child.Child(uint32(0 + flags.WalletChainIndex))
 	child, _ = child.Child(uint32(flags.WalletAddressIndex))
@@ -107,8 +113,8 @@ func main() {
 					},
 					&cli.StringFlag{
 						Name:  "password",
-						Value: "Mnemonic password",
-						Usage: "",
+						Value: "",
+						Usage: "Mnemonic password",
 					},
 					&cli.BoolFlag{
 						Name:  "wallet-testnet",
@@ -164,6 +170,14 @@ func recover(c *cli.Context) error {
 		WalletAddressIndex: c.Int("wallet-address-index"),
 		WalletChainIndex:   c.Int("wallet-chain-index"),
 	}
+
+	NetworkCoinIndex := 0
+
+	if flags.WalletTestnet {
+		NetworkCoinIndex = 1
+	}
+
+	fmt.Printf("Derivation Path: m / 44' / %d' / %d' / %d / %d\n", NetworkCoinIndex, flags.WalletAccountIndex, flags.WalletChainIndex, flags.WalletAddressIndex)
 
 	mnemonicArray := strings.Split(flags.Mnemonic, " ")
 	mnemonicFinalArray := []string{}
