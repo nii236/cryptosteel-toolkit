@@ -3,80 +3,51 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
-	"flag"
+	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/btcsuite/btcutil/base58"
+	"gopkg.in/urfave/cli.v2"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil/hdkeychain"
 	bip39 "github.com/nii236/go-bip39"
 )
 
-var mnemonic string
-var password string
-var truncated bool
-var generate bool
-var accountIndex uint64
-var chainIndex uint64
-var addressIndex uint64
-
-// Example: pizz knoc taxi bris quar tuna much mang okay twel edge brok occu base corn
-func init() {
-	flag.StringVar(&mnemonic, "m", "", "Mnemonic")
-	flag.BoolVar(&truncated, "t", false, "Truncated mnemonic")
-	flag.StringVar(&password, "p", "", "Password")
-	flag.Uint64Var(&accountIndex, "a", 0, "Account index")
-	flag.Uint64Var(&chainIndex, "c", 0, "Chain index")
-	flag.Uint64Var(&addressIndex, "i", 0, "Address index")
-	flag.BoolVar(&generate, "gen", false, "Generate a mnemonic")
-
-}
-
-func generateMnemonic() {
-	entropy, err := bip39.NewEntropy(256)
-	if err != nil {
-		panic(err)
-	}
-	mnemonic, err := bip39.NewMnemonic(entropy)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(mnemonic)
-}
-
-func prepareSeed(mnemonic, password string, truncated bool) *hdkeychain.ExtendedKey {
-	seed := bip39.NewSeed(mnemonic, password)
+func prepareSeed(mnemonic string, flags *RecoverFlags) (*hdkeychain.ExtendedKey, error) {
+	seed := bip39.NewSeed(flags.Mnemonic, flags.Password)
 	fmt.Println("mnemonic:", mnemonic)
 	hdkey, err := hdkeychain.NewMaster(seed, &chaincfg.MainNetParams)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 	child, _ := hdkey.Child(0x80000000 + 44)
 	child, _ = child.Child(0x80000000)
-	child, _ = child.Child(uint32(0x80000000 + accountIndex))
-	child, _ = child.Child(uint32(0 + chainIndex))
-	child, _ = child.Child(uint32(addressIndex))
+	child, _ = child.Child(uint32(0x80000000 + flags.WalletAccountIndex))
+	child, _ = child.Child(uint32(0 + flags.WalletChainIndex))
+	child, _ = child.Child(uint32(flags.WalletAddressIndex))
 
-	return child
+	return child, nil
 }
 
-func mnemonicToScriptPubKey(child *hdkeychain.ExtendedKey) {
+func mnemonicToScriptPubKey(child *hdkeychain.ExtendedKey) error {
 	scriptpubkey, err := child.Address(&chaincfg.MainNetParams)
 	fmt.Println("Extended Key:", child.String())
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	fmt.Println("scriptPubKey:", scriptpubkey)
+	return nil
 }
 
-func mnemonicToWIF(child *hdkeychain.ExtendedKey) {
+func mnemonicToWIF(child *hdkeychain.ExtendedKey) error {
 	privKey, err := child.ECPrivKey()
 
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	var finalBytes bytes.Buffer
 	finalBytes.WriteByte(chaincfg.MainNetParams.PrivateKeyID)
@@ -94,36 +65,136 @@ func mnemonicToWIF(child *hdkeychain.ExtendedKey) {
 	finalBytes.Write(result2[0:4])
 	wif := base58.Encode(finalBytes.Bytes())
 	fmt.Println("WIF:", wif)
+	return nil
+}
+
+// RecoverFlags are the settings needed to recover the keys from the mnemonic
+type RecoverFlags struct {
+	Mnemonic           string
+	TruncatedMnemonic  bool
+	Password           string
+	WalletTestnet      bool
+	WalletAccountIndex int
+	WalletAddressIndex int
+	WalletChainIndex   int
 }
 
 func main() {
-	flag.Parse()
+	app := &cli.App{
+		Name:  "Cryptosteel Toolkit",
+		Usage: "Create and recover WIFs and scriptpubkeys from Cryptosteel mnemonics",
 
-	if generate {
-		generateMnemonic()
-		return
+		Commands: []*cli.Command{
+			{
+				Name:   "generate",
+				Usage:  "Generate a mnemonic",
+				Action: generate,
+			},
+			{
+				Name:   "recover",
+				Usage:  "Recover WIF and scriptpubkeys from a mneomnic",
+				Action: recover,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "mnemonic",
+						Value: "",
+						Usage: "Full mnemonic",
+					},
+					&cli.BoolFlag{
+						Name:  "truncated",
+						Value: false,
+						Usage: "Truncated mnemonic (4 letters per word)",
+					},
+					&cli.StringFlag{
+						Name:  "password",
+						Value: "Mnemonic password",
+						Usage: "",
+					},
+					&cli.BoolFlag{
+						Name:  "wallet-testnet",
+						Value: false,
+						Usage: "Use testnet",
+					},
+					&cli.IntFlag{
+						Name:  "wallet-account-index",
+						Value: 0,
+						Usage: "The wallet account index",
+					},
+					&cli.IntFlag{
+						Name:  "wallet-address-index",
+						Value: 0,
+						Usage: "The wallet address index",
+					},
+					&cli.IntFlag{
+						Name:  "wallet-chain-index",
+						Value: 0,
+						Usage: "The wallet chain index",
+					},
+				},
+			},
+		},
 	}
 
-	mnemonicArray := strings.Split(mnemonic, " ")
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func generate(c *cli.Context) error {
+	entropy, err := bip39.NewEntropy(256)
+	if err != nil {
+		return err
+	}
+	mnemonic, err := bip39.NewMnemonic(entropy)
+	if err != nil {
+		return err
+	}
+	fmt.Println(mnemonic)
+	return nil
+}
+
+func recover(c *cli.Context) error {
+	flags := &RecoverFlags{
+		Mnemonic:           c.String("mnemonic"),
+		TruncatedMnemonic:  c.Bool("truncated"),
+		Password:           c.String("password"),
+		WalletTestnet:      c.Bool("wallet-testnet"),
+		WalletAccountIndex: c.Int("wallet-account-index"),
+		WalletAddressIndex: c.Int("wallet-address-index"),
+		WalletChainIndex:   c.Int("wallet-chain-index"),
+	}
+
+	mnemonicArray := strings.Split(flags.Mnemonic, " ")
 	mnemonicFinalArray := []string{}
 	var mnemonicFinal string
-	if truncated {
+	if flags.TruncatedMnemonic {
 		fmt.Println("Untruncating mnemonic...")
 		for _, truncatedWord := range mnemonicArray {
 			fmt.Println("Untruncating word:", truncatedWord)
 			untruncatedWord := bip39.TruncatedWordMap[truncatedWord]
 			if bip39.TruncatedWordMap[truncatedWord] == "" {
-				log.Fatalln("No matching word found for:", truncatedWord)
+				return errors.New("No matching word found for: " + truncatedWord)
 			}
 			mnemonicFinalArray = append(mnemonicFinalArray, untruncatedWord)
 		}
 		mnemonicFinal = strings.Join(mnemonicFinalArray, " ")
 	} else {
 		fmt.Println("Using full mnemonic...")
-		mnemonicFinal = mnemonic
+		mnemonicFinal = flags.Mnemonic
 	}
 
-	child := prepareSeed(mnemonicFinal, password, truncated)
-	mnemonicToScriptPubKey(child)
-	mnemonicToWIF(child)
+	child, err := prepareSeed(mnemonicFinal, flags)
+	if err != nil {
+		return err
+	}
+	err = mnemonicToScriptPubKey(child)
+	if err != nil {
+		return err
+	}
+	err = mnemonicToWIF(child)
+	if err != nil {
+		return err
+	}
+	return nil
 }

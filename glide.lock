@@ -1,5 +1,5 @@
-hash: a3982a93401a00b9daecb9e8266f65cd70e599a5a829e63b3f76f8204ca61f11
-updated: 2016-12-24T12:08:08.868947049+08:00
+hash: 04b76026c49b1ab7a9cebf3ff1fe1338084c31a35892b4795bc9658572430262
+updated: 2017-12-12T11:48:30.365431497+08:00
 imports:
 - name: github.com/btcsuite/btcd
   version: 9f962b60d68c1e0d7ccfc9898c9c5b514253d753
@@ -21,8 +21,12 @@ imports:
   - ripemd160
 - name: github.com/nii236/go-bip39
   version: 859971db0904ac8a932609a858add3da440bf087
+- name: github.com/urfave/cli
+  version: 119bb6564841921ce6f1401e0f5d75317bdd9f4d
 - name: golang.org/x/crypto
-  version: f6b343c37ca80bfa8ea539da67a0b621f84fab1d
+  version: 9477e0b78b9ac3d0b03822fd95422e2fe07627cd
   subpackages:
   - pbkdf2
+- name: gopkg.in/urfave/cli.v2
+  version: b2bf3c5abeb90da407891aecd1df2c5a1f6170c1
 testImports: []

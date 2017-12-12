@@ -8,3 +8,4 @@ import:
   - hdkeychain
   - base58
 - package: github.com/nii236/go-bip39
+- package: gopkg.in/urfave/cli.v2
